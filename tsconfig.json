@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es5",
+    "outDir": "build",
+    "sourceMap": true,
+    "types": ["node","socket.io"]
+  },
+  "compileOnSave": true
+}
