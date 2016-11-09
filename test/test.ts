@@ -3,9 +3,41 @@ import {error} from "util";
 /**
  * Created by Weicheng Huang on 2016/11/9.
  */
+var user_idtifier = [
+    {"empty":false,"id":"111","name":"qqq"},
+    {"empty":false,"id":"222","name":"www"},
+    {"empty":false,"id":"333","name":"eee"},
+    {"empty":false,"id":"444","name":"rrr"},
+    {"empty":false,"id":"555","name":"ttt"},
+    {"empty":true},
+    {"empty":false,"id":"666","name":"yyy"},
+    {"empty":false,"id":"777","name":"uuu"},
+    {"empty":false,"id":"888","name":"iii"},
+    {"empty":false,"id":"999","name":"ooo"},
+    {"empty":false,"id":"000","name":"ppp"},
+    {"empty":true}];
+var child = require("child_process");
+var server;
+
 var C = require("socket.io-client");
 var assert = require('assert');
+var process = require("process");
 describe("Server Connectivity:",function () {
+    before(function() {
+        server  = child.spawn("node",["build/gameserver/GameServer"]);
+        server.stderr.on("data",function (e) {
+            console.log("Server Error:"+e);
+        });
+        server.on("close",function (e) {
+            console.log("Server Exit:"+e);
+            process.abort(1);
+        });
+        console.log("Test Server Started!");
+    });
+    after(function () {
+        console.log("Test Server Closed");
+        server.kill();
+    });
     describe("Test connection",function () {
         it("client should be able to connect to server",function (done) {
             this.timeout(3000);
@@ -40,8 +72,8 @@ describe("Server Connectivity:",function () {
             this.timeout(2000);
             var client = C.connect("ws://localhost:8000",{'forceNew': true,reconnection: false});
             client.on("connect",function () {
-                client.emit("login",{id:3222,name:"Weicheng Huang"});
-            })
+                client.emit("login",{id:111,name:"222"});
+            });
             client.on("disconnect",function () {
                 done();
             });
@@ -50,7 +82,7 @@ describe("Server Connectivity:",function () {
             this.timeout(2000);
             var client = C.connect("ws://localhost:8000",{'forceNew': true,reconnection: false});
             client.on("connect",function () {
-                client.emit("login",{id:"123123",name:"WeichengHuang"});
+                client.emit("login",{id:"bdb",name:"dfb"});
             })
             client.on("disconnect",function () {
                 done();
@@ -62,7 +94,7 @@ describe("Server Connectivity:",function () {
             this.timeout(5000);
             var client = C.connect("ws://localhost:8000",{'forceNew': true,reconnection: false});
             client.on("connect",function () {
-                client.emit("login",{id:"111",name:"Weicheng Huang"});
+                client.emit("login",user_idtifier[0]);
             })
             client.on("disconnect",function () {
                 throw new Error("Kicked by server");
@@ -75,8 +107,8 @@ describe("Server Connectivity:",function () {
             this.timeout(5000);
             var client = C.connect("ws://localhost:8000",{'forceNew': true,reconnection: false});
             client.on("connect",function () {
-                client.emit("login",{id:"222",name:"Snow Yang"});
-                client.emit("login",{id:"222",name:"Snow Yang"});
+                client.emit("login",user_idtifier[1]);
+                client.emit("login",user_idtifier[1]);
             })
             client.on("disconnect",function () {
                 throw new Error("Kicked by server");
@@ -91,11 +123,11 @@ describe("Server Connectivity:",function () {
             var client1 = C.connect("ws://localhost:8000",{'forceNew': true,reconnection: false});
             var client2 = C.connect("ws://localhost:8000",{'forceNew': true,reconnection: false});
             client1.on("connect",function () {
-                client1.emit("login",{id:"333",name:"Peter"});
+                client1.emit("login",user_idtifier[2]);
 
             });
             setTimeout(function () {
-                client2.emit("login",{id:"333",name:"Peter"});
+                client2.emit("login",user_idtifier[2]);
             },1000);
 
             client1.on("disconnect",function () {

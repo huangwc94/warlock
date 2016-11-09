@@ -31,8 +31,26 @@ var S = require("socket.io");
  */
 
 try {
-    var user_names = [{"empty":false,"id":"111","name":"Weicheng Huang"},{"empty":false,"id":"222","name":"Snow Yang"},{"empty":false,"id":"333","name":"Peter"},{"empty":true},{"empty":true},{"empty":true},{"empty":true},{"empty":true},{"empty":true},{"empty":true},{"empty":true},{"empty":true}];
-    //var user_names = JSON.parse(process.argv[2]);
+    var user_names;
+    if(process.argv[2]){
+        user_names = JSON.parse(process.argv[2]);
+    }else{
+        console.log("Caller did not provides user_name definition, using test definition instead!");
+        user_names = [
+            {"empty":false,"id":"111","name":"qqq"},
+            {"empty":false,"id":"222","name":"www"},
+            {"empty":false,"id":"333","name":"eee"},
+            {"empty":false,"id":"444","name":"rrr"},
+            {"empty":false,"id":"555","name":"ttt"},
+            {"empty":true},
+            {"empty":false,"id":"666","name":"yyy"},
+            {"empty":false,"id":"777","name":"uuu"},
+            {"empty":false,"id":"888","name":"iii"},
+            {"empty":false,"id":"999","name":"ooo"},
+            {"empty":false,"id":"000","name":"ppp"},
+            {"empty":true}];
+    }
+
     if (!user_names) {
         /**
          var user_names = [{
@@ -340,3 +358,4 @@ export class GameServer {
  * This is the function call to start the game server
  */
 GameServer.instance.start(port);
+
