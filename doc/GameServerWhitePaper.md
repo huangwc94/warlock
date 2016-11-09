@@ -4,7 +4,7 @@
 * This is a iOS online game, inspired by `Warcraft III` RPG map "Warlock", using a RTS style control system.  
 * In this game, each player will have a controllable character to move in a plane
 * Each player can launch a fire ball to shoot each other
-* The fire ball and character are following certain 2D physics rules, like two fireball will display when collision happen,
+* The fire ball and character are following certain 2D physics rules, like two fireball will bounce when collision happen,
 or character can be push to the reversed direction where fire ball comes and hit it.
 * The system is scalable and expendable, can add new spell and play mode without changing server's engine.
 * Contains a map system, that user can play different map without changing server.
@@ -18,7 +18,7 @@ or character can be push to the reversed direction where fire ball comes and hit
 * Centralize Server will be hosted on Heroku or other Saas platform
 * Game asset are collected from Unity Asset Store and free online model website
 
-## Networking technology we choose
+## Networking Technology
 * Lockstep is bounded by the most slow client in a game, since we are developing a mobile game, it is impossible to use
 Lockstep because mobile phone and it's 3G connection is unpredictable, plus iOS and Android will have different implementation
 on float point. Lockstep will not be enrolled our consideration.
@@ -30,7 +30,7 @@ will overwhelm the client.
   * Latency will <=100ms. (Provides more )
 * Finally, the curve implementation of client/server idea, introduced by [Forrest Smith](https://blog.forrestthewoods.com/the-tech-of-planetary-annihilation-chronocam-292e3d6b169a#.pidp66dxn) was taking into account.
 
-## Network structure
+## Network Structure
 * Client is act like a half monitor and half server in the game, the client will upload all player's action to server. like (move to (x,y)), (cast spell, id = X, angle = X)
 * Server will update the character in the world, and return back the status of character, like (update character set speed_x = X,speed_y = Y Where id = X)
 * Client will play animation and move that character with latest updated data structure.
@@ -53,7 +53,7 @@ will overwhelm the client.
 * Server needs more calculation resource, since Nodejs is not good at CPU heavy task. To make sure game is run smoothly, server pulses at least 30fps
 * Player might be hit by fire ball that seems not possible to collied character. or vice versa.
 
-## Other concern
+## Other Concern
 * The team have no experience on mobile online game developing, nobody knows what the game will look like when all our design 
 push on the table.
 * Once popular, the budget for running server is a significant number.
