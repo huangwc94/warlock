@@ -14,8 +14,9 @@
 import * as process from "process";
 import {ColorSet} from "./gamecolor";
 import {World} from "./world";
-
 var fs = require("fs");
+process.chdir(__dirname);
+
 var LogColor = require("colors");
 LogColor.setTheme(ColorSet.std);
 
