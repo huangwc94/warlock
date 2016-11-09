@@ -19,8 +19,7 @@ var fs = require("fs");
 var LogColor = require("colors");
 LogColor.setTheme(ColorSet.std);
 
-
-import * as S from "socket.io";
+var S = require("socket.io");
 
 /**
  * Argument preparation
@@ -88,7 +87,7 @@ export class GameServer {
     /**
      * The socket.io server
      */
-    sio: SocketIO.Server;
+    sio;
 
     /**
      * kick list maintains the a dict of socket_id and timer_id
@@ -124,7 +123,7 @@ export class GameServer {
 
         // init socket.io server
         this.log_info("Socket.io start");
-        this.sio = S().listen(port);
+        this.sio = new S();
 
         this.log_success("Network is up, listening port:" + port);
 
