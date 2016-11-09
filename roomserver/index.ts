@@ -6,7 +6,10 @@ import {stringify} from "querystring";
  */
 
 var S = require("socket.io");
-
+/**
+ * TODO:
+ * 1, Add Team element to room server
+ */
 
 
 export class MasterRoom{

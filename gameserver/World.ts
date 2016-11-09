@@ -12,15 +12,17 @@ export class World {
     constructor(map_dir) {
 
         try{
-            var mp = require("../map/" + map_dir + "/FirstMap/index");
+            var mp = require("../map/" + map_dir + "/index.js");
+            this.map = new mp.CustomMap();
+            this.map.init();
         }catch (err){
+            GameServer.instance.log_error(err);
             GameServer.instance.log_error("Fatal error: Can not load map!");
             GameServer.instance.end(1);
         }
 
-        this.map = new mp.CustomMap();
-        this.map.init();
         this.players = [];
+        GameServer.instance.log_success("World Init Successfully!");
     }
     public run(){
 

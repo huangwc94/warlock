@@ -20,7 +20,7 @@ var LogColor = require("colors");
 LogColor.setTheme(ColorSet.std);
 
 
-var S = require("socket.io");
+import * as S from "socket.io";
 
 /**
  * Argument preparation
@@ -41,12 +41,12 @@ try {
          },]
          */
         console.log("Usage: $ node GameServer [list of user object(required)] [port|8000] [map_folder_name|FirstMap] [Loglevel|5]");
-        process.abort();
+        process.exit();
     }
     if (user_names.length != 12) {
         console.log("User name structure is invalid");
         console.log("Usage: $ node GameServer [list of user object(required)] [port|8000] [map_folder_name|FirstMap] [Loglevel|5]");
-        process.abort();
+        process.exit();
     }
     for (let user of user_names) {
         if (user.empty) {
@@ -55,20 +55,21 @@ try {
         if (!user.id || !user.name) {
             console.log("User name structure is invalid");
             console.log("Usage: $ node GameServer [list of user object(required)] [port|8000] [map_folder_name|FirstMap] [Loglevel|5]");
-            process.abort();
+            process.exit();
         }
     }
 } catch (err) {
+    console.log(err);
     console.log("Usage: $ node GameServer [list of user name(required)] [port|8000] [map_folder_name|FirstMap] [Loglevel|5]");
-    process.abort();
+    process.exit();
 }
 
 let debug = true;
 let port = process.argv[3] || 8000;
 let map_folder = process.argv[4] || "FirstMap";
-if (!fs.existsSync("../map/" + map_folder + "/index")) {
+if (!fs.existsSync("../map/" + map_folder + "/index.js")) {
     console.log("The map file is not existed");
-    process.abort();
+    process.exit();
 }
 let log_level = process.argv[5] || 5;
 
@@ -100,16 +101,16 @@ export class GameServer {
 
     /**
      * var in_game_socket = [socket]
-     * the index is the player id
+     * the index.ts is the player id
      * the value is the player socket
      */
     in_game_socket: Array<SocketIO.Socket>;
 
     constructor() {
-        this.log_info("Init World...");
-        this.world = new World(map_folder);
+
+
         this.kick_list = {};
-        this.in_game_socket = new Array<SocketIO.Socket>(13);
+        this.in_game_socket = new Array<SocketIO.Socket>(12);
     }
 
     /**
@@ -117,9 +118,14 @@ export class GameServer {
      * @param port: The port number of this server to use
      */
     public start(port) {
+        // init world
+        this.log_info("Init World...");
+        this.world = new World(map_folder);
+
         // init socket.io server
         this.log_info("Socket.io start");
-        this.sio = S(port);
+        this.sio = S().listen(port);
+
         this.log_success("Network is up, listening port:" + port);
 
         // handling socket connection
@@ -151,7 +157,7 @@ export class GameServer {
             this.world = null;
         }
 
-        process.abort();
+        process.exit();
     }
 
     /**
@@ -221,7 +227,7 @@ export class GameServer {
             this.log_warning("A user is using wrong data structure to login" + JSON.stringify(e));
         } else {
             let playerid = -1;
-            let cont = 0;
+            let cont = -1;
             for (let usr of user_names) {
                 cont += 1;
                 if (usr.empty) {
@@ -233,11 +239,11 @@ export class GameServer {
                     }
                 }
             }
-            if (playerid > 0) {
-                this.log_success("Player:" + user_names[playerid - 1] + " login successfully as playerid=" + playerid);
-                this.add_user_to_world(playerid, user_names[playerid - 1], socket);
+            if (playerid >= 0) {
+                this.log_success("Player:" + user_names[playerid] + " login successfully as playerid=" + playerid);
+                this.add_user_to_world(playerid, user_names[playerid], socket);
             } else {
-                this.log_warning("Player:" + user_names[playerid - 1] + " login fail as playerid=" + playerid);
+                this.log_warning("Player:" + user_names[playerid] + " login fail as playerid=" + playerid);
             }
         }
     }
@@ -307,6 +313,14 @@ export class GameServer {
             console.log(LogColor.success(Date() + ":" + msg));
         }
     }
+    public log_dump(){
+        this.log_debug("====================== CORE DUMP ======================");
+
+        this.log_debug("========================= END =========================");
+    }
 }
 
+/**
+ * This is the function call to start the game server
+ */
 GameServer.instance.start(port);
