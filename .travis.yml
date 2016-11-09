@@ -6,6 +6,7 @@ node_js:
   - "node"
 before_install:
   - "npm install -g typescript"
+  - "npm install"
   - "tsc -v"
   - "tsc"
 script:

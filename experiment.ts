@@ -7,7 +7,7 @@ server.on("error",function (err) {
 });
 server.stderr.on("data",function (e) {
     console.log("ERR:"+e);
-})
+});
 server.stdout.on("data",function (data) {
     console.log("STD:"+data);
 });

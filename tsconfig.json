@@ -4,8 +4,8 @@
     "target": "es5",
     "outDir": "build",
     "sourceMap": true,
-    "moduleResolution": "node"
-
+    "moduleResolution": "node",
+    "types": ["@types/node","@types/socket.io","@types/mocha"]
   },
   "compileOnSave": true
 }
