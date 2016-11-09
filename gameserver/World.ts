@@ -4,11 +4,13 @@
 import {GamePlayer} from "./GamePlayer";
 import {Map} from "./Map";
 import {GameServer} from "./GameServer";
+
 export class World {
     map: Map;
     players: Array<GamePlayer>;
 
     constructor(map_dir) {
+
         try{
             var mp = require("../map/" + map_dir + "/FirstMap/index");
         }catch (err){
@@ -19,6 +21,9 @@ export class World {
         this.map = new mp.CustomMap();
         this.map.init();
         this.players = [];
+    }
+    public run(){
+
     }
 
     public player_join(id, name) {
@@ -31,4 +36,5 @@ export class World {
     public player_leave(id){
 
     }
+
 }

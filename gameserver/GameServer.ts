@@ -1,6 +1,11 @@
 /**
  * GameServer class handles the incoming/outcoming socket event,
  * And provides as a Singleton Object to all other game class
+ *
+ * The purpose of this class is to provide an abstract player input/output layer
+ * So everything come into game logic(World class) is safe
+ *
+ * This class manages all sockets, the world will not need to touch socket programming at all
  * Created by Weicheng Huang on 2016/11/7.
  *
  * caller: $ node GameServer [list of user name(required)] [port|8000] [map_folder_name|FirstMap] [Loglevel|5]
@@ -130,6 +135,8 @@ export class GameServer {
                 GameServer.instance.user_disconnect(this);
             })
         });
+        this.log_success("World is running now!");
+        this.world.run();
     }
 
     /**
@@ -195,9 +202,9 @@ export class GameServer {
     public kick_user(socket) {
         let id = this.in_game_socket.indexOf(socket);
         if (id > 0) {
-            this.log_warning("Player:" + id + " was kick by Game Server");
-            this.in_game_socket[id] = null;
+            this.log_warning("In Game Player:" + id + " was kick by Game Server");
             this.world.player_leave(id);
+            this.in_game_socket[id] = null;
         } else {
             this.remove_auto_kick(socket);
         }
@@ -300,8 +307,6 @@ export class GameServer {
             console.log(LogColor.success(Date() + ":" + msg));
         }
     }
-
-
 }
 
 GameServer.instance.start(port);
