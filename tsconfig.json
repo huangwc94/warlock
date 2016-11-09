@@ -4,6 +4,7 @@
     "target": "es5",
     "outDir": "build",
     "sourceMap": true,
+    "moduleResolution": "node",
     "types": ["node","socket.io","mocha"]
   },
   "compileOnSave": true
