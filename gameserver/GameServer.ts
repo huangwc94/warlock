@@ -13,7 +13,7 @@
 // Import all necessary module
 import * as process from "process";
 import {ColorSet} from "./gamecolor";
-import {World} from "./world";
+import {World} from "./World";
 var fs = require("fs");
 process.chdir(__dirname);
 
