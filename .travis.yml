@@ -3,4 +3,6 @@ node_js:
   - "node"
 before_install:
   - "npm install -g typescript"
+  - "npm install -g mocha socket.io mocha"
+  - "tsc -v"
   - "tsc"
