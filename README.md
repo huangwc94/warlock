@@ -6,4 +6,4 @@
 * Game Server APi [here](doc/GameServerAPI.md)
 * See [White Paper](doc/GameServerWhitePaper.md) for general discussion of game structure  
 
-##### Author: Weicheng Huang
+##### Author: Weicheng Huang, Zongrong Peter Zhuang
