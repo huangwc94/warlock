@@ -38,104 +38,107 @@ describe("Server Connectivity:",function () {
         console.log("Test Server Closed");
         server.kill();
     });
-    describe("Test connection",function () {
-        it("client should be able to connect to server",function (done) {
-            this.timeout(3000);
-            var client = C.connect("ws://localhost:8000",{'forceNew': true,reconnection: false});
-            client.on("connect",function () {
-                done();
+    setTimeout(function () {
+        describe("Test connection",function () {
+            it("client should be able to connect to server",function (done) {
+                this.timeout(3000);
+                var client = C.connect("ws://localhost:8000",{'forceNew': true,reconnection: false});
+                client.on("connect",function () {
+                    done();
+                });
             });
         });
-    });
-    describe("Test auto kick",function () {
-        it("client should be kicked by server after 3s",function (done) {
-            this.timeout(5000);
-            var client = C.connect("ws://localhost:8000",{'forceNew': true,reconnection: false});
-            client.on("disconnect",function () {
-                done();
+        describe("Test auto kick",function () {
+            it("client should be kicked by server after 3s",function (done) {
+                this.timeout(5000);
+                var client = C.connect("ws://localhost:8000",{'forceNew': true,reconnection: false});
+                client.on("disconnect",function () {
+                    done();
+                });
             });
         });
-    });
 
-    describe("Test login with wrong parameter",function () {
-        it("null input, client should be kick soon",function (done) {
-            this.timeout(2000);
-            var client = C.connect("ws://localhost:8000",{'forceNew': true,reconnection: false});
-            client.on("connect",function () {
-                client.emit("login");
+        describe("Test login with wrong parameter",function () {
+            it("null input, client should be kick soon",function (done) {
+                this.timeout(2000);
+                var client = C.connect("ws://localhost:8000",{'forceNew': true,reconnection: false});
+                client.on("connect",function () {
+                    client.emit("login");
+                });
+                client.on("disconnect",function () {
+                    done();
+                });
             });
-            client.on("disconnect",function () {
-                done();
+            it("wrong id, client should be kick soon",function (done) {
+                this.timeout(2000);
+                var client = C.connect("ws://localhost:8000",{'forceNew': true,reconnection: false});
+                client.on("connect",function () {
+                    client.emit("login",{id:111,name:"222"});
+                });
+                client.on("disconnect",function () {
+                    done();
+                });
+            });
+            it("wrong name, client should be kick soon",function (done) {
+                this.timeout(2000);
+                var client = C.connect("ws://localhost:8000",{'forceNew': true,reconnection: false});
+                client.on("connect",function () {
+                    client.emit("login",{id:"bdb",name:"dfb"});
+                })
+                client.on("disconnect",function () {
+                    done();
+                });
             });
         });
-        it("wrong id, client should be kick soon",function (done) {
-            this.timeout(2000);
-            var client = C.connect("ws://localhost:8000",{'forceNew': true,reconnection: false});
-            client.on("connect",function () {
-                client.emit("login",{id:111,name:"222"});
+        describe("Test login with right parameter",function () {
+            it("client should not be kicked,login once",function (done) {
+                this.timeout(5000);
+                var client = C.connect("ws://localhost:8000",{'forceNew': true,reconnection: false});
+                client.on("connect",function () {
+                    client.emit("login",user_idtifier[0]);
+                })
+                client.on("disconnect",function () {
+                    throw new Error("Kicked by server");
+                });
+                setTimeout(function () {
+                    done();
+                },4000);
             });
-            client.on("disconnect",function () {
-                done();
-            });
-        });
-        it("wrong name, client should be kick soon",function (done) {
-            this.timeout(2000);
-            var client = C.connect("ws://localhost:8000",{'forceNew': true,reconnection: false});
-            client.on("connect",function () {
-                client.emit("login",{id:"bdb",name:"dfb"});
-            })
-            client.on("disconnect",function () {
-                done();
-            });
-        });
-    });
-    describe("Test login with right parameter",function () {
-        it("client should not be kicked,login once",function (done) {
-            this.timeout(5000);
-            var client = C.connect("ws://localhost:8000",{'forceNew': true,reconnection: false});
-            client.on("connect",function () {
-                client.emit("login",user_idtifier[0]);
-            })
-            client.on("disconnect",function () {
-                throw new Error("Kicked by server");
-            });
-            setTimeout(function () {
-                done();
-            },4000);
-        });
-        it("client should not be kicked,login twice with same identifier",function (done) {
-            this.timeout(5000);
-            var client = C.connect("ws://localhost:8000",{'forceNew': true,reconnection: false});
-            client.on("connect",function () {
-                client.emit("login",user_idtifier[1]);
-                client.emit("login",user_idtifier[1]);
-            })
-            client.on("disconnect",function () {
-                throw new Error("Kicked by server");
+            it("client should not be kicked,login twice with same identifier",function (done) {
+                this.timeout(5000);
+                var client = C.connect("ws://localhost:8000",{'forceNew': true,reconnection: false});
+                client.on("connect",function () {
+                    client.emit("login",user_idtifier[1]);
+                    client.emit("login",user_idtifier[1]);
+                })
+                client.on("disconnect",function () {
+                    throw new Error("Kicked by server");
 
+                });
+                setInterval(function () {
+                    done();
+                },4000);
             });
-            setInterval(function () {
-                done();
-            },4000);
-        });
-        it("first client should be kicked,login twice with same identifier but different socket",function (done) {
-            this.timeout(5000);
-            var client1 = C.connect("ws://localhost:8000",{'forceNew': true,reconnection: false});
-            var client2 = C.connect("ws://localhost:8000",{'forceNew': true,reconnection: false});
-            client1.on("connect",function () {
-                client1.emit("login",user_idtifier[2]);
+            it("first client should be kicked,login twice with same identifier but different socket",function (done) {
+                this.timeout(5000);
+                var client1 = C.connect("ws://localhost:8000",{'forceNew': true,reconnection: false});
+                var client2 = C.connect("ws://localhost:8000",{'forceNew': true,reconnection: false});
+                client1.on("connect",function () {
+                    client1.emit("login",user_idtifier[2]);
 
-            });
-            setTimeout(function () {
-                client2.emit("login",user_idtifier[2]);
-            },1000);
+                });
+                setTimeout(function () {
+                    client2.emit("login",user_idtifier[2]);
+                },1000);
 
-            client1.on("disconnect",function () {
-                done();
-            });
-            client2.on("disconnect",function () {
-                throw new Error("Wrong socket kicked by server");
+                client1.on("disconnect",function () {
+                    done();
+                });
+                client2.on("disconnect",function () {
+                    throw new Error("Wrong socket kicked by server");
+                });
             });
         });
-    });
+    },2000); // allow 2s to let server start!
+
 });
