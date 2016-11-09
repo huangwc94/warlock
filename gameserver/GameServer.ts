@@ -61,7 +61,7 @@ try {
 let debug = true;
 let port = process.argv[3] || 8000;
 let map_folder = process.argv[4] || "FirstMap";
-if(!fs.existsSync("../map/"+map_folder+"/index")){
+if (!fs.existsSync("../map/" + map_folder + "/index")) {
     console.log("The map file is not existed");
     process.abort();
 }
@@ -136,9 +136,14 @@ export class GameServer {
      * End game
      * This will quit the server decently, should only be called by world object
      */
-    public end() {
-        this.log_success("Game Finish Successfully!");
-        this.world = null;
+    public end(code) {
+        if (code) {
+            this.log_error("Game Shut down because of error");
+        } else {
+            this.log_success("Game Finish Successfully!");
+            this.world = null;
+        }
+
         process.abort();
     }
 
@@ -210,22 +215,22 @@ export class GameServer {
         } else {
             let playerid = -1;
             let cont = 0;
-            for(let usr of user_names){
+            for (let usr of user_names) {
                 cont += 1;
-                if(usr.empty){
+                if (usr.empty) {
                     continue;
-                }else{
-                    if(usr.id == e.id && usr.name == e.name){
+                } else {
+                    if (usr.id == e.id && usr.name == e.name) {
                         playerid = cont;
                         break;
                     }
                 }
             }
-            if(playerid>0){
-                this.log_success("Player:"+user_names[playerid - 1]+" login successfully as playerid="+playerid);
-                this.add_user_to_world(playerid,user_names[playerid - 1],socket);
-            }else{
-                this.log_warning("Player:"+user_names[playerid - 1]+" login fail as playerid="+playerid);
+            if (playerid > 0) {
+                this.log_success("Player:" + user_names[playerid - 1] + " login successfully as playerid=" + playerid);
+                this.add_user_to_world(playerid, user_names[playerid - 1], socket);
+            } else {
+                this.log_warning("Player:" + user_names[playerid - 1] + " login fail as playerid=" + playerid);
             }
         }
     }
