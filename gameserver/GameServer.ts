@@ -30,7 +30,8 @@ var S = require("socket.io");
  */
 
 try {
-    var user_names = JSON.parse(process.argv[2]);
+    var user_names = [{"empty":false,"id":"111","name":"Weicheng Huang"},{"empty":false,"id":"222","name":"Snow Yang"},{"empty":false,"id":"333","name":"Peter"},{"empty":true},{"empty":true},{"empty":true},{"empty":true},{"empty":true},{"empty":true},{"empty":true},{"empty":true},{"empty":true}];
+    //var user_names = JSON.parse(process.argv[2]);
     if (!user_names) {
         /**
          var user_names = [{
@@ -51,7 +52,7 @@ try {
         if (user.empty) {
             continue;
         }
-        if (!user.id || !user.name) {
+        if (!user["id"] || !user["name"]) {
             console.log("User name structure is invalid");
             console.log("Usage: $ node GameServer [list of user object(required)] [port|8000] [map_folder_name|FirstMap] [Loglevel|5]");
             process.exit();
@@ -100,7 +101,7 @@ export class GameServer {
 
     /**
      * var in_game_socket = [socket]
-     * the index.ts is the player id
+     * the test.ts is the player id
      * the value is the player socket
      */
     in_game_socket: Array<SocketIO.Socket>;
@@ -123,7 +124,7 @@ export class GameServer {
 
         // init socket.io server
         this.log_info("Socket.io start");
-        this.sio = new S();
+        this.sio = new S(port);
 
         this.log_success("Network is up, listening port:" + port);
 
@@ -167,15 +168,17 @@ export class GameServer {
     private add_auto_kick(socket) {
         let timer_id = setTimeout(function () {
             GameServer.instance.kick_user(socket);
-        }, 5);
-        this.log_info("Socket:" + socket.id + " will be kicked after 5 s");
+        }, 3000);
+        this.log_info("Socket:" + socket.id + " will be kicked after 3s");
         this.kick_list[socket.id] = timer_id;
     }
 
     private remove_auto_kick(socket) {
-        clearTimeout(this.kick_list[socket.id]);
-        delete this.kick_list[socket.id];
-        this.log_info("Socket:" + socket.id + " auto kick function was disabled");
+        if(this.kick_list[socket.id]){
+            clearTimeout(this.kick_list[socket.id]);
+            delete this.kick_list[socket.id];
+            this.log_info("Socket:" + socket.id + " auto kick function was disabled");
+        }
     }
 
     /**
@@ -195,25 +198,28 @@ export class GameServer {
     }
 
     private user_disconnect(socket) {
-        if (this.in_game_socket.indexOf(socket) > 0) {
+        if (this.in_game_socket.indexOf(socket) >= 0) {
             this.world.player_leave(this.in_game_socket.indexOf(socket));
+            this.log_warning("In game Player leave, ID = "+this.in_game_socket.indexOf(socket));
             this.in_game_socket[this.in_game_socket.indexOf(socket)] = null;
+
         } else {
             this.remove_auto_kick(socket);
         }
-        this.log_info("A User disconnect from server");
+        this.log_info("A User disconnect from server:"+socket.id);
     }
 
     public kick_user(socket) {
         let id = this.in_game_socket.indexOf(socket);
-        if (id > 0) {
+        if (id >= 0) {
             this.log_warning("In Game Player:" + id + " was kick by Game Server");
             this.world.player_leave(id);
             this.in_game_socket[id] = null;
         } else {
             this.remove_auto_kick(socket);
         }
-        this.log_warning("A user was kicked by server");
+        socket.disconnect();
+        this.log_warning("A User:" + socket.id + " was kick by Game Server");
     }
 
     /**
@@ -222,8 +228,9 @@ export class GameServer {
      * @param e: {[id:string]:[name]:[string]}
      */
     public user_login(socket, e) {
-        if (!e.id || !e.name) {
-            this.log_warning("A user is using wrong data structure to login" + JSON.stringify(e));
+        if (!e || !e["id"] || !e["name"]) {
+            this.log_warning("A user is using wrong data structure to login:" + JSON.stringify(e));
+            this.kick_user(socket);
         } else {
             let playerid = -1;
             let cont = -1;
@@ -232,17 +239,18 @@ export class GameServer {
                 if (usr.empty) {
                     continue;
                 } else {
-                    if (usr.id == e.id && usr.name == e.name) {
+                    if (usr["id"] == e.id && usr["name"] == e.name) {
                         playerid = cont;
                         break;
                     }
                 }
             }
             if (playerid >= 0) {
-                this.log_success("Player:" + user_names[playerid] + " login successfully as playerid=" + playerid);
-                this.add_user_to_world(playerid, user_names[playerid], socket);
+                this.log_success("Player:" + JSON.stringify(user_names[playerid]) + " login successfully as playerid=" + playerid);
+                this.add_user_to_world(playerid, user_names[playerid]["name"], socket);
             } else {
                 this.log_warning("Player:" + user_names[playerid] + " login fail as playerid=" + playerid);
+                this.kick_user(socket);
             }
         }
     }
@@ -254,10 +262,18 @@ export class GameServer {
      * @param socket
      */
     private add_user_to_world(id, name, socket) {
+        if(this.in_game_socket[id] == socket){
+            this.log_warning("Duplicated user login action d="+id+", ignored");
+            return;
+        }
+        if(this.in_game_socket[id]){
+            this.log_warning("Different user login into same slot:id="+id+", kick old socket");
+            this.kick_user(this.in_game_socket[id]);
+        }
         this.remove_auto_kick(socket);
         this.world.player_join(id, name);
         this.in_game_socket[id] = socket;
-        this.log_success("A user was adding to world name=" + name + " id=" + id);
+        this.log_success("A user was adding to world name=" + JSON.stringify(name) + " id=" + id);
     }
 
     /**
@@ -269,7 +285,7 @@ export class GameServer {
     public send_to_user(id, information) {
         try {
             this.in_game_socket[id].emit("game_reply", information);
-            this.log_info("send out message:" + JSON.stringify(information));
+            this.log_info("send out message to player="+id+":" + JSON.stringify(information));
         } catch (err) {
             this.log_error("Unable to send reply to player id=" + id + " with information:" + JSON.stringify(information));
         }

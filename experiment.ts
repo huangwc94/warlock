@@ -7,4 +7,4 @@ var k = {
     "eee":"ggg"
 }
 console.log(k['aaa']);
-console.log(k.eee);
+console.log(JSON.stringify([{"empty":false,"id":"123123","name":"Weicheng Huang"},{"empty":true},{"empty":true},{"empty":true},{"empty":true},{"empty":true},{"empty":true},{"empty":true},{"empty":true},{"empty":true},{"empty":true},{"empty":true}]));
