@@ -2,7 +2,7 @@
  * Created by Weicheng Huang on 2016/11/7.
  */
 import {Player} from "./player";
-import {GameServer} from "../gameserver/simplecontrolserver";
+import {GameServer} from "GameServer.ts";
 import {MasterRoom} from "./index";
 import Timer = NodeJS.Timer;
 var ROOM_ID = 0;
