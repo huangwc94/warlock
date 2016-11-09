@@ -8,3 +8,5 @@ before_install:
   - "npm install -g typescript"
   - "tsc -v"
   - "tsc"
+script:
+  - "npm test"
