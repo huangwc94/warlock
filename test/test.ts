@@ -150,6 +150,7 @@ describe("Server Connectivity:",function () {
             },1000);
 
             client1.on("disconnect",function () {
+                client2.removeListener("disconnect",errorRaiseKickByServer);
                 done();
             });
             client2.on("disconnect",errorRaiseKickByServer);
