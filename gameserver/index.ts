@@ -3,7 +3,7 @@
  */
 import {GameServer} from "./GameServer";
 import * as process from "process";
-if (require.main === module){
+if (require.main === module) {
 
     var fs = require("fs");
     process.chdir(__dirname);
@@ -19,23 +19,23 @@ if (require.main === module){
 
     try {
         var g_user_names;
-        if(process.argv[2]){
+        if (process.argv[2]) {
             g_user_names = JSON.parse(process.argv[2]);
-        }else{
+        } else {
             console.log("Caller did not provides user_name definition, using test definition instead!");
             g_user_names = [
-                {"empty":false,"id":"111","name":"qqq"},
-                {"empty":false,"id":"222","name":"www"},
-                {"empty":false,"id":"333","name":"eee"},
-                {"empty":false,"id":"444","name":"rrr"},
-                {"empty":false,"id":"555","name":"ttt"},
-                {"empty":true},
-                {"empty":false,"id":"666","name":"yyy"},
-                {"empty":false,"id":"777","name":"uuu"},
-                {"empty":false,"id":"888","name":"iii"},
-                {"empty":false,"id":"999","name":"ooo"},
-                {"empty":false,"id":"000","name":"ppp"},
-                {"empty":true}];
+                {"empty": false, "id": "111", "name": "qqq"},
+                {"empty": false, "id": "222", "name": "www"},
+                {"empty": false, "id": "333", "name": "eee"},
+                {"empty": false, "id": "444", "name": "rrr"},
+                {"empty": false, "id": "555", "name": "ttt"},
+                {"empty": true},
+                {"empty": false, "id": "666", "name": "yyy"},
+                {"empty": false, "id": "777", "name": "uuu"},
+                {"empty": false, "id": "888", "name": "iii"},
+                {"empty": false, "id": "999", "name": "ooo"},
+                {"empty": false, "id": "000", "name": "ppp"},
+                {"empty": true}];
         }
 
         if (!g_user_names) {
@@ -80,6 +80,6 @@ if (require.main === module){
     /**
      * This is the function call to start the game server
      */
-    var s = new GameServer(g_user_names,g_map_folder,g_port,g_log_level);
+    var s = new GameServer(g_user_names, g_map_folder, g_port, g_log_level);
     s.start();
 }
