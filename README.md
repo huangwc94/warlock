@@ -1,5 +1,5 @@
 # Warlock Multi-payer game Server Source
-![img](https://travis-ci.org/huangwc94/warlock.svg?branch=master)
+[![img](https://travis-ci.org/huangwc94/warlock.svg?branch=master)](https://travis-ci.org/huangwc94/warlock)
 * This game is using socket.io to communicate with Unity client
 * This is the game server and room server src
 * API design can go to doc/ for further reference
