@@ -13,14 +13,14 @@
 // Import all necessary module
 import * as process from "process";
 import * as Engine from "./Engine";
-
+var S = require("socket.io");
 
 
 /**
  * GameServer is the complete server that can run, it will call engine to do the job
  * @author Weicheng Huang
  */
-export class GameServer {
+export class GameServer implements Engine.Networker{
     /**
      * Singleton instance of GameServer itself, can be access from anywhere
      * @type {GameServer}
@@ -53,31 +53,51 @@ export class GameServer {
      */
     in_game_socket: Array<SocketIO.Socket>;
 
-    static getInstance(){
-        if(!GameServer.instance){
-            GameServer.instance = new GameServer();
-        }
-        return GameServer.instance;
-    }
-    constructor() {
+    /**
+     * The Map name : string
+     */
+    map_name:string;
+    /**
+     * The port number
+     */
+    port:string;
+
+    /**
+     * The user name list that can connect to this game
+     */
+    user_names;
+    /**
+     * Constructor
+     * @param user_names : The user name object, see index for more detail
+     * @param map : the map name. Map should be a folder under ../map/
+     * @param port : The port number to run
+     * @param level : the log level for engine, default:5 (output everything)
+     */
+    constructor(user_names,map,port,level) {
+        this.user_names = user_names;
+        Engine.set_log_level(level);
         this.kick_list = {};
+        this.port = port;
+        this.map_name = map;
         this.in_game_socket = new Array<SocketIO.Socket>(12);
+        GameServer.instance = this;
     }
 
     /**
      * Start the game, add socket event listener
      * @param port: The port number of this server to use
      */
-    public start(port) {
+    public start() {
         // init world
-        Engine.log_info("Init World...");
-        this.world = new Engine.World(g_map_folder);
+        Engine.log_info("Init Engine...");
+        Engine.init_engine(this.map_name,this);
+        this.world = Engine.getWorld();
 
         // init socket.io server
         Engine.log_info("Socket.io start");
-        this.sio = new S(port);
+        this.sio = new S(this.port);
 
-        Engine.log_success("Network is up, listening port:" + port);
+        Engine.log_success("Network is up, listening port:" + this.port);
 
         // handling socket connection
         this.sio.on("connection", function (socket) {
@@ -97,10 +117,10 @@ export class GameServer {
     }
 
     /**
-     * End game
+     * End game (implemented interface Engine.Networker)
      * This will quit the server decently, should only be called by world object
      */
-    public end(code) {
+    public send_end_signal(code) {
         if (code) {
             Engine.log_error("Game Shut down because of error");
             process.exit(code);
@@ -188,7 +208,7 @@ export class GameServer {
         } else {
             let playerid = -1;
             let cont = -1;
-            for (let usr of g_user_names) {
+            for (let usr of this.user_names) {
                 cont += 1;
                 if (usr.empty) {
                     continue;
@@ -200,10 +220,10 @@ export class GameServer {
                 }
             }
             if (playerid >= 0) {
-                Engine.log_success("Player:" + JSON.stringify(g_user_names[playerid]) + " login successfully as playerid=" + playerid);
-                this.add_user_to_world(playerid, g_user_names[playerid]["name"], socket);
+                Engine.log_success("Player:" + JSON.stringify(this.user_names[playerid]) + " login successfully as playerid=" + playerid);
+                this.add_user_to_world(playerid, this.user_names[playerid]["name"], socket);
             } else {
-                Engine.log_warning("Player:" + g_user_names[playerid] + " login fail as playerid=" + playerid);
+                Engine.log_warning("Player:" + this.user_names[playerid] + " login fail as playerid=" + playerid);
                 this.kick_user(socket);
             }
         }
@@ -220,6 +240,10 @@ export class GameServer {
             Engine.log_warning("Duplicated user login action d="+id+", ignored");
             return;
         }
+        if(this.in_game_socket.indexOf(socket) >=0){
+            Engine.log_warning("A in game user is trying to login with different player id,ignored");
+            return;
+        }
         if(this.in_game_socket[id]){
             Engine.log_warning("Different user login into same slot:id="+id+", kick old socket");
             this.kick_user(this.in_game_socket[id]);
@@ -231,20 +255,32 @@ export class GameServer {
     }
 
     /**
-     * Send information to player with id
+     * Send information to player with id (implemented interface Engine.Networker)
      *
      * @param id:number
      * @param information: JSON
      */
-    public send_to_user(id, information) {
+    public send_message_to(id,type,message) {
         try {
-            this.in_game_socket[id].emit("game_reply", information);
-            Engine.log_info("send out message to player="+id+":" + JSON.stringify(information));
+            this.in_game_socket[id].emit("game_reply", message);
+            Engine.log_info("send out message to player="+id+":" + JSON.stringify(message));
         } catch (err) {
-            Engine.log_error("Unable to send reply to player id=" + id + " with information:" + JSON.stringify(information));
+            Engine.log_error("Unable to send reply to player id=" + id + " with information:" + JSON.stringify(message));
         }
     }
-
+    /**
+     * Send message to all player (implemented interface Engine.Networker)
+     * @param type: the message flag/type
+     * @param message : the message data to send (See Doc to see more definition of message and)
+     */
+    public send_message_all(type,message){
+        try {
+            this.sio.emit({type:type,data:message});
+            Engine.log_info("send out message to all:" + JSON.stringify(message));
+        } catch (err) {
+            Engine.log_error("Unable to send reply to all:" + JSON.stringify(message));
+        }
+    }
     public log_dump(){
         console.log("====================== CORE DUMP ======================");
 
@@ -252,87 +288,3 @@ export class GameServer {
     }
 }
 
-if (require.main === module){
-
-    var fs = require("fs");
-    process.chdir(__dirname);
-
-    var LogColor = require("colors");
-    LogColor.setTheme(Engine.ColorSet.std);
-
-    var S = require("socket.io");
-
-    /**
-     * Argument preparation
-     * g_user_names(required): a list of slot description, only valid user can join this game, socket need to login
-     * port(optional,default:8000): the port that runs this game server
-     * map_folder(optional,default:"FirstMap"): the map that will be used in this game
-     * debug(optional,default:true): if we need to output debug information
-     */
-
-    try {
-        var g_user_names;
-        if(process.argv[2]){
-            g_user_names = JSON.parse(process.argv[2]);
-        }else{
-            console.log("Caller did not provides user_name definition, using test definition instead!");
-            g_user_names = [
-                {"empty":false,"id":"111","name":"qqq"},
-                {"empty":false,"id":"222","name":"www"},
-                {"empty":false,"id":"333","name":"eee"},
-                {"empty":false,"id":"444","name":"rrr"},
-                {"empty":false,"id":"555","name":"ttt"},
-                {"empty":true},
-                {"empty":false,"id":"666","name":"yyy"},
-                {"empty":false,"id":"777","name":"uuu"},
-                {"empty":false,"id":"888","name":"iii"},
-                {"empty":false,"id":"999","name":"ooo"},
-                {"empty":false,"id":"000","name":"ppp"},
-                {"empty":true}];
-        }
-
-        if (!g_user_names) {
-            /**
-             var g_user_names = [{
-         "empty":boolean // if this was set to true, then this slot is empty
-         "id":user_id, // system generated one time use id
-         "name":user_name // user preferred name
-         },]
-             */
-            console.log("Usage: $ node GameServer [list of user object(required)] [port|8000] [map_folder_name|FirstMap] [Loglevel|5]");
-            process.exit();
-        }
-        if (g_user_names.length != 12) {
-            console.log("User name structure is invalid");
-            console.log("Usage: $ node GameServer [list of user object(required)] [port|8000] [map_folder_name|FirstMap] [Loglevel|5]");
-            process.exit();
-        }
-        for (let user of g_user_names) {
-            if (user.empty) {
-                continue;
-            }
-            if (!user["id"] || !user["name"]) {
-                console.log("User name structure is invalid");
-                console.log("Usage: $ node GameServer [list of user object(required)] [port|8000] [map_folder_name|FirstMap] [Loglevel|5]");
-                process.exit();
-            }
-        }
-    } catch (err) {
-        console.log(err);
-        console.log("Usage: $ node GameServer [list of user name(required)] [port|8000] [map_folder_name|FirstMap] [Loglevel|5]");
-        process.exit();
-    }
-
-    var g_port = process.argv[3] || 8000;
-    var g_map_folder = process.argv[4] || "FirstMap";
-    if (!fs.existsSync("../map/" + g_map_folder + "/index.js")) {
-        console.log("The map file is not existed");
-        process.exit();
-    }
-    Engine.set_log_level(process.argv[5] || 5);
-
-    /**
-     * This is the function call to start the game server
-     */
-    GameServer.getInstance().start(g_port);
-}

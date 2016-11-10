@@ -4,7 +4,7 @@
   "description": "Alpha",
   "main": "index.js",
   "scripts": {
-    "start": "node build/gameserver/GameServer",
+    "start": "node build/gameserver/index",
     "test": "mocha build/test"
   },
   "author": "",

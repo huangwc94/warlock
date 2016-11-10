@@ -2,18 +2,52 @@
  * Created by Weicheng Huang on 2016/11/9.
  */
 
-import {GameServer} from "./GameServer";
 import {EventEmitter} from "events";
 
-var LogColor = require("colors");
+/**
+ * A Singleton world object, no body should make a world object outside, it should call this for singleton access
+ */
+var WORLD:World;
 
+/**
+ * A Singleton event listen and emitter
+ */
+var EVENT:EventEmitter;
 
-var g_log_level = 5;
-var g_debug = true;
-export function set_log_level(level){
-    g_log_level = level;
+/**
+ * Init the game world with a map
+ * @param map:string, the map name
+ * @param sender:A network adapter that engine will call when sending information to client
+ */
+
+export function init_engine(map,sender:Networker){
+    if(!WORLD)
+        WORLD = new World(map,sender);
+    if(!EVENT){
+        EVENT = new EventEmitter();
+    }
+}
+export function getWorld(){
+    if(!WORLD){
+        throw new Error("The engine is not initialized!");
+    }
+    return WORLD;
+}
+export function getEvent(){
+    if(!EVENT){
+        throw new Error("The engine is not initialized!");
+    }
+    return EVENT;
 }
 
+/**
+ * A predefined color set in hex
+ * It have 3 type:
+ *      std: for standard output color
+ *      team: for team color
+ *      player: for play default color
+ *      quality: for item quality
+ */
 export var ColorSet = {
     std:{
         primary:"blue",
@@ -50,7 +84,8 @@ export var ColorSet = {
         legendary:"#ff8000",
     }
 };
-LogColor.setTheme(ColorSet.std);
+
+
 export class DisplayableObject{
 
 }
@@ -79,7 +114,7 @@ export class Spell{
 
     }
     public cast(){
-        World.EventSystem.emit("Spell(id="+this.id+") casted by "+this.caster.name );
+        EVENT.emit("Spell(id="+this.id+") casted by "+this.caster.name );
     }
 }
 export class Unit{
@@ -88,15 +123,39 @@ export class Unit{
         this.name = "Unnamed";
     }
 }
+/**
+ * A caller of engine need to implement this interface, so the engine can have a delegate to Server
+ */
+export interface Networker{
+    /**
+     * Send message to all player
+     * @param type: the message flag/type
+     * @param message : the message data to send (See Doc to see more definition of message and)
+     */
+    send_message_all(type,message);
+    /**
+     * The engine will call this method to send message to client
+     * @param id : the player id
+     * @param type: the message flag/type
+     * @param message : the message data to send (See Doc to see more definition of message and)
+     */
+    send_message_to(id:number,type,message);
+
+    /**
+     * Engine will let the server know when the game is end
+     * @param id:number the stop code, if not provides, the game was considered to end decently,
+     * otherwise, the game exit with error
+     */
+    send_end_signal(id:number);
+}
+
 export class World {
-    static EventSystem:EventEmitter;
-    static instance:World;
     map: Map;
     players: Array<GamePlayer>;
+    server:Networker;
 
-    constructor(map_dir) {
-        World.EventSystem = new EventEmitter();
-        World.instance = this;
+    constructor(map_dir,sender) {
+        this.server = sender;
         try{
             var mp = require("../map/" + map_dir + "/index.js");
             this.map = new mp.CustomMap();
@@ -104,8 +163,8 @@ export class World {
         }catch (err){
             log_error(err);
             log_error("Fatal error: Can not load map!");
-            if(GameServer.instance){
-                GameServer.instance.end(1);
+            if(this.server){
+                this.server.send_end_signal(1);
             }
         }
 
@@ -133,7 +192,42 @@ export class World {
 
 }
 
-// logger
+/**
+ * global log level indicator
+ * Can be:
+ *      5: info,success,warning,error
+ *      4: success,warning,error
+ *      3: warning,error
+ *      2: error
+ * @type {number} default:5
+ */
+var g_log_level = 5;
+
+/**
+ * Is debug mode
+ * If this set to true, we can use log_debug to output more detail
+ * @type {boolean}
+ */
+var g_debug = true;
+
+/**
+ * Outsize world can change the log_level
+ * @param level
+ */
+export function set_log_level(level){
+    g_log_level = level;
+}
+
+/**
+ * Log color definition
+ */
+var LogColor = require("colors");
+LogColor.setTheme(ColorSet.std);
+
+/**
+ * Log helper, those function can print log to stdout
+ *
+ */
 export function log_info(msg) {
     if (g_log_level > 4) {
         console.log(LogColor.info(Date() + ":" + msg));

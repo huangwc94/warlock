@@ -25,13 +25,14 @@ var process = require("process");
 describe("Server Connectivity:",function () {
     before(function() {
         var old = Date.now();
-        server  = child.spawn("node",["build/gameserver/GameServer"]);
+        server  = child.spawn("node",["build/gameserver/index"]);
         server.stderr.on("data",function (e) {
-            console.log("Server Error:"+e);
+            throw new Error("Server Error:\n"+e);
+
         });
         server.on("close",function () {
             console.log("Server Exit:");
-            process.abort(1);
+
         });
         while(Date.now() - old <=1500); // wait 1.7s to let server start
         console.log("Test Server Started!");
@@ -117,7 +118,21 @@ describe("Server Connectivity:",function () {
                 throw new Error("Kicked by server");
 
             });
-            setInterval(function () {
+            setTimeout(function () {
+                done();
+            },4000);
+        });
+        it("client should not be kicked,login twice with different identifier",function (done) {
+            this.timeout(5000);
+            var client = C.connect("ws://localhost:8000",{'forceNew': true,reconnection: false});
+            client.on("connect",function () {
+                client.emit("login",user_idtifier[8]);
+                client.emit("login",user_idtifier[9]);
+            });
+            client.on("disconnect",function () {
+                throw new Error("different identifier,Kicked by server");
+            });
+            setTimeout(function () {
                 done();
             },4000);
         });
@@ -126,11 +141,11 @@ describe("Server Connectivity:",function () {
             var client1 = C.connect("ws://localhost:8000",{'forceNew': true,reconnection: false});
             var client2 = C.connect("ws://localhost:8000",{'forceNew': true,reconnection: false});
             client1.on("connect",function () {
-                client1.emit("login",user_idtifier[2]);
+                client1.emit("login",user_idtifier[3]);
 
             });
             setTimeout(function () {
-                client2.emit("login",user_idtifier[2]);
+                client2.emit("login",user_idtifier[3]);
             },1000);
 
             client1.on("disconnect",function () {
