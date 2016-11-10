@@ -33,7 +33,7 @@ describe("Server Connectivity:",function () {
             console.log("Server Exit:"+e);
             process.abort(1);
         });
-        while(Date.now() - old <=1700); // wait 1.7s to let server start
+        while(Date.now() - old <=1000); // wait 1.7s to let server start
         console.log("Test Server Started!");
     });
     after(function () {
