@@ -22,6 +22,10 @@ var server;
 var C = require("socket.io-client");
 var assert = require('assert');
 var process = require("process");
+function errorRaiseKickByServer(){
+    throw new Error("Kicked by server");
+}
+
 describe("Server Connectivity:",function () {
     before(function() {
         var old = Date.now();
@@ -100,10 +104,10 @@ describe("Server Connectivity:",function () {
             client.on("connect",function () {
                 client.emit("login",user_idtifier[0]);
             })
-            client.on("disconnect",function () {
-                throw new Error("Kicked by server");
-            });
+
+            client.on("disconnect",errorRaiseKickByServer);
             setTimeout(function () {
+                client.removeListener("disconnect",errorRaiseKickByServer);
                 done();
             },4000);
         });
@@ -114,11 +118,9 @@ describe("Server Connectivity:",function () {
                 client.emit("login",user_idtifier[1]);
                 client.emit("login",user_idtifier[1]);
             })
-            client.on("disconnect",function () {
-                throw new Error("Kicked by server");
-
-            });
+            client.on("disconnect",errorRaiseKickByServer);
             setTimeout(function () {
+                client.removeListener("disconnect",errorRaiseKickByServer);
                 done();
             },4000);
         });
@@ -129,10 +131,9 @@ describe("Server Connectivity:",function () {
                 client.emit("login",user_idtifier[8]);
                 client.emit("login",user_idtifier[9]);
             });
-            client.on("disconnect",function () {
-                throw new Error("different identifier,Kicked by server");
-            });
+            client.on("disconnect",errorRaiseKickByServer);
             setTimeout(function () {
+                client.removeListener("disconnect",errorRaiseKickByServer);
                 done();
             },4000);
         });
@@ -151,9 +152,11 @@ describe("Server Connectivity:",function () {
             client1.on("disconnect",function () {
                 done();
             });
-            client2.on("disconnect",function () {
-                throw new Error("Wrong socket kicked by server");
-            });
+            client2.on("disconnect",errorRaiseKickByServer);
+            setTimeout(function () {
+                client2.removeListener("disconnect",errorRaiseKickByServer);
+                done();
+            },4000);
         });
     });
 });
