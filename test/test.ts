@@ -29,11 +29,11 @@ describe("Server Connectivity:",function () {
         server.stderr.on("data",function (e) {
             console.log("Server Error:"+e);
         });
-        server.on("close",function (e) {
-            console.log("Server Exit:"+e);
+        server.on("close",function () {
+            console.log("Server Exit:");
             process.abort(1);
         });
-        while(Date.now() - old <=1000); // wait 1.7s to let server start
+        while(Date.now() - old <=1500); // wait 1.7s to let server start
         console.log("Test Server Started!");
     });
     after(function () {

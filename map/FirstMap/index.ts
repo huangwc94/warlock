@@ -1,5 +1,5 @@
-import {Map} from "../../gameserver/Map";
+import * as Engine from "../../gameserver/Engine";
 
-export class CustomMap extends Map{
+export class CustomMap extends Engine.Map{
 
 }
