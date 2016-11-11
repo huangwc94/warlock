@@ -158,11 +158,15 @@ export class World {
     map: Map;
     players: Array<GamePlayer>;
     server: Networker;
-
+    world_tick_id;
+    private is_pause:boolean;
+    private is_start:boolean;
+    start_time:number;
     constructor(map_dir, sender) {
         this.server = sender;
         try {
             var mp = require("../map/" + map_dir + "/index.js");
+            log_info("Loading map...");
             this.map = new mp.CustomMap();
             this.map.init();
         } catch (err) {
@@ -172,9 +176,7 @@ export class World {
                 this.server.send_end_signal(1);
             }
         }
-
         this.players = [];
-
     }
 
     public init() {
@@ -182,9 +184,35 @@ export class World {
     }
 
     public start() {
-
+        log_info("Start world tick...");
+        setInterval(function () {
+            this.tick();
+        },1000/g_fps);
+        setInterval(function () {
+            if(!this.is_pause){
+                EVENT.emit("")
+            }
+        })
+        this.start_time = Date.now();
+        EVENT.emit("OnGameStarted");
     }
 
+    public tick(){
+        if(!this.is_pause){
+            // each tick
+        }
+    }
+
+    public pause(){
+        if(!this.is_pause){
+            this.is_pause = true;
+            EVENT.emit("")
+        }
+
+    }
+    public unpause(){
+        this.is_pause = false;
+    }
     public player_join(id, name) {
 
     }
@@ -198,6 +226,20 @@ export class World {
     }
 
 
+}
+/**
+ * Tick FPS, how many tick we should do for each minute
+ * Default: 60fps
+ * For an optimal server, we should have at least 30 fps . (To Be Tested)
+ */
+var g_fps = 60;
+
+/**
+ * This function should be call before the game started.
+ * @param fps
+ */
+export function set_fps(fps){
+    g_fps = fps;
 }
 
 /**

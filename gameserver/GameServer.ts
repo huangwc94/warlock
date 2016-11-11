@@ -122,11 +122,10 @@ export class GameServer implements Engine.Networker{
      */
     public send_end_signal(code) {
         if (code) {
-            Engine.log_error("Game Shut down because of error");
+            Engine.log_error("Game shut down because of error");
             process.exit(code);
         } else {
             Engine.log_success("Game Finish Successfully!");
-            this.world = null;
             process.exit();
         }
     }
