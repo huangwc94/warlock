@@ -96,7 +96,6 @@ export class GameServer implements Engine.Networker{
         // init socket.io server
         Engine.log_info("Socket.io start");
         this.sio = new S(this.port);
-
         Engine.log_success("Network is up, listening port:" + this.port);
 
         // handling socket connection
